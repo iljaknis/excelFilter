@@ -2,6 +2,8 @@ import pandas as pd
 import tkinter as tk
 from tkinter import filedialog, simpledialog, messagebox
 from tkinter import ttk
+from openpyxl import load_workbook
+from openpyxl.styles import PatternFill
 
 def filter_and_copy_excel(file_path, sheet_name, column_name, filter_value, output_sheet_name):
     try:
@@ -119,7 +121,24 @@ def auto_detect_and_copy(file_path, sheet_name, column_name):
                 # Write the updated original DataFrame back to its original sheet
                 df.to_excel(writer, sheet_name=sheet_name, index=False)
 
-        messagebox.showinfo("Success", f"Auto-detection and copying completed successfully.")
+        # Load the workbook to apply styles
+        workbook = load_workbook(file_path)
+        worksheet = workbook[sheet_name]
+
+        # Define a red fill for cells
+        red_fill = PatternFill(start_color="FFFF0000", end_color="FFFF0000", fill_type="solid")
+
+        # Apply the red fill to rows with no or more than one entry in the "Filtered" column
+        for row in range(2, worksheet.max_row + 1):
+            filtered_cell = worksheet.cell(row=row, column=worksheet.max_column)
+            filtered_value = filtered_cell.value
+            if pd.isna(filtered_value) or len(filtered_value.split(", ")) != 1:
+                for col in range(1, worksheet.max_column + 1):
+                    worksheet.cell(row=row, column=col).fill = red_fill
+
+        workbook.save(file_path)
+
+        messagebox.showinfo("Success", "Auto-detection and copying completed successfully.\nRows with no or more than one entry in the 'Filtered' column have been marked.")
     except Exception as e:
         messagebox.showerror("Error", f"An error occurred: {e}")
 
@@ -212,7 +231,8 @@ def show_readme():
         "2. Choose the Excel file to process.\n"
         "3. Enter the sheet name containing the data.\n"
         "4. Enter the column name to filter by.\n"
-        "5. The program will automatically filter and copy data to sheets named after the detected values.\n\n"
+        "5. The program will automatically filter and copy data to sheets named after the detected values.\n"
+        "6. Rows with no or more than one entry in the 'Filtered' column will be marked with a red background.\n\n"
         "Note: The program will update the original sheet by marking the filtered rows."
     )
     messagebox.showinfo("Readme", readme_text)
