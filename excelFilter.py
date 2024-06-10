@@ -3,7 +3,6 @@ import tkinter as tk
 from tkinter import filedialog, simpledialog, messagebox
 from tkinter import ttk
 
-
 def filter_and_copy_excel(file_path, sheet_name, column_name, filter_value, output_sheet_name):
     try:
         # Load the Excel file
@@ -33,8 +32,7 @@ def filter_and_copy_excel(file_path, sheet_name, column_name, filter_value, outp
         num_rows_copied = len(filtered_df)
 
         if num_rows_copied == 0:
-            messagebox.showinfo("No Results",
-                                f"No new rows found containing '{filter_value}' in column '{column_name}'.")
+            messagebox.showinfo("No Results", f"No new rows found containing '{filter_value}' in column '{column_name}'.")
             return
 
         # Mark filtered rows with the output sheet name in the original DataFrame
@@ -59,11 +57,9 @@ def filter_and_copy_excel(file_path, sheet_name, column_name, filter_value, outp
             # Write the updated original DataFrame back to its original sheet
             df.to_excel(writer, sheet_name=sheet_name, index=False)
 
-        messagebox.showinfo("Success",
-                            f"Filtered data written to sheet '{output_sheet_name}' in the Excel file.\n{num_rows_copied} rows copied.")
+        messagebox.showinfo("Success", f"Filtered data written to sheet '{output_sheet_name}' in the Excel file.\n{num_rows_copied} rows copied.")
     except Exception as e:
         messagebox.showerror("Error", f"An error occurred: {e}")
-
 
 def auto_detect_and_copy(file_path, sheet_name, column_name):
     try:
@@ -127,7 +123,6 @@ def auto_detect_and_copy(file_path, sheet_name, column_name):
     except Exception as e:
         messagebox.showerror("Error", f"An error occurred: {e}")
 
-
 def open_file_dialog_manual():
     file_path = filedialog.askopenfilename(
         title="Select Excel File",
@@ -137,18 +132,16 @@ def open_file_dialog_manual():
         try:
             # Load the Excel file
             xls = pd.ExcelFile(file_path)
-
-            # Get the sheet name from the user
-            sheet_name = simpledialog.askstring("Input", "Enter the sheet name:")
+            sheet_names = xls.sheet_names
+            sheet_name = simpledialog.askstring("Input", f"Enter the sheet name:\nAvailable sheets: {', '.join(sheet_names)}")
             if sheet_name not in xls.sheet_names:
                 messagebox.showerror("Error", f"Sheet '{sheet_name}' does not exist in the Excel file.")
                 return
 
             # Read the specified sheet into a DataFrame
             df = pd.read_excel(file_path, sheet_name=sheet_name)
-
-            # Get the column name from the user
-            column_name = simpledialog.askstring("Input", "Enter the column name to filter by:")
+            column_names = df.columns.tolist()
+            column_name = simpledialog.askstring("Input", f"Enter the column name to filter by:\nAvailable columns: {', '.join(column_names)}")
             if column_name not in df.columns:
                 messagebox.showerror("Error", f"Column '{column_name}' does not exist in the sheet '{sheet_name}'.")
                 return
@@ -157,12 +150,19 @@ def open_file_dialog_manual():
             filter_value = simpledialog.askstring("Input", "Enter the value to filter for:")
             output_sheet_name = simpledialog.askstring("Input", "Enter the output sheet name:")
             if filter_value and output_sheet_name:
-                filter_and_copy_excel(file_path, sheet_name, column_name, filter_value, output_sheet_name)
+                summary = (
+                    f"File Path: {file_path}\n"
+                    f"Sheet Name: {sheet_name}\n"
+                    f"Column Name: {column_name}\n"
+                    f"Filter Value: {filter_value}\n"
+                    f"Output Sheet Name: {output_sheet_name}"
+                )
+                if messagebox.askokcancel("Confirm Details", f"Please confirm the details:\n\n{summary}"):
+                    filter_and_copy_excel(file_path, sheet_name, column_name, filter_value, output_sheet_name)
             else:
                 messagebox.showerror("Error", "Filter value and output sheet name must be provided.")
         except Exception as e:
             messagebox.showerror("Error", f"An error occurred: {e}")
-
 
 def open_file_dialog_auto():
     file_path = filedialog.askopenfilename(
@@ -173,23 +173,49 @@ def open_file_dialog_auto():
         try:
             # Load the Excel file
             xls = pd.ExcelFile(file_path)
-
-            # Get the sheet name from the user
-            sheet_name = simpledialog.askstring("Input", "Enter the input sheet name:")
+            sheet_names = xls.sheet_names
+            sheet_name = simpledialog.askstring("Input", f"Enter the input sheet name:\nAvailable sheets: {', '.join(sheet_names)}")
             if sheet_name not in xls.sheet_names:
                 messagebox.showerror("Error", f"Sheet '{sheet_name}' does not exist in the Excel file.")
                 return
 
-            # Get the column name from the user
-            column_name = simpledialog.askstring("Input", "Enter the column name to filter by:")
-            if column_name not in pd.read_excel(file_path, sheet_name=sheet_name).columns:
+            # Read the specified sheet into a DataFrame
+            df = pd.read_excel(file_path, sheet_name=sheet_name)
+            column_names = df.columns.tolist()
+            column_name = simpledialog.askstring("Input", f"Enter the column name to filter by:\nAvailable columns: {', '.join(column_names)}")
+            if column_name not in df.columns:
                 messagebox.showerror("Error", f"Column '{column_name}' does not exist in the sheet '{sheet_name}'.")
                 return
 
-            auto_detect_and_copy(file_path, sheet_name, column_name)
+            summary = (
+                f"File Path: {file_path}\n"
+                f"Sheet Name: {sheet_name}\n"
+                f"Column Name: {column_name}"
+            )
+            if messagebox.askokcancel("Confirm Details", f"Please confirm the details:\n\n{summary}"):
+                auto_detect_and_copy(file_path, sheet_name, column_name)
         except Exception as e:
             messagebox.showerror("Error", f"An error occurred: {e}")
 
+def show_readme():
+    readme_text = (
+        "Excel Filter and Copy Tool\n\n"
+        "Manual Mode:\n"
+        "1. Click 'Select Excel File (Manual)'.\n"
+        "2. Choose the Excel file to process.\n"
+        "3. Enter the sheet name containing the data.\n"
+        "4. Enter the column name to filter by.\n"
+        "5. Enter the value to filter for.\n"
+        "6. Enter the output sheet name to save the filtered data.\n\n"
+        "Auto Detect Mode:\n"
+        "1. Click 'Select Excel File (Auto Detect)'.\n"
+        "2. Choose the Excel file to process.\n"
+        "3. Enter the sheet name containing the data.\n"
+        "4. Enter the column name to filter by.\n"
+        "5. The program will automatically filter and copy data to sheets named after the detected values.\n\n"
+        "Note: The program will update the original sheet by marking the filtered rows."
+    )
+    messagebox.showinfo("Readme", readme_text)
 
 # Create the main window
 root = tk.Tk()
@@ -202,10 +228,13 @@ style.configure("TButton", padding=6, relief="flat", background="#ccc")
 
 # Add buttons to open the file dialog for manual and auto modes
 open_button_manual = ttk.Button(root, text="Select Excel File (Manual)", command=open_file_dialog_manual)
-open_button_manual.pack(pady=30)
+open_button_manual.pack(pady=10)
 
 open_button_auto = ttk.Button(root, text="Select Excel File (Auto Detect)", command=open_file_dialog_auto)
-open_button_auto.pack(pady=20)
+open_button_auto.pack(pady=10)
+
+readme_button = ttk.Button(root, text="Readme", command=show_readme)
+readme_button.pack(pady=10)
 
 # Run the Tkinter event loop
 root.mainloop()
