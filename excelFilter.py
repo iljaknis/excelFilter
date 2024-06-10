@@ -193,14 +193,17 @@ def open_file_dialog_auto():
 # Create the main window
 root = tk.Tk()
 root.title("Excel Filter and Copy")
-root.geometry("300x200")
+root.geometry("400x300")
 
 # Add buttons to open the file dialog for manual and auto modes
 open_button_manual = tk.Button(root, text="Select Excel File (Manual)", command=open_file_dialog_manual)
-open_button_manual.pack(pady=10)
+open_button_manual.config(height=2, width=30)
+open_button_manual.pack(pady=50)
 
 open_button_auto = tk.Button(root, text="Select Excel File (Auto Detect)", command=open_file_dialog_auto)
-open_button_auto.pack(pady=10)
+# adjust the button to a height of 50 pixels und width of 200 pixels
+open_button_auto.config(height=2, width=30)
+open_button_auto.pack(pady=30)
 
 # Run the Tkinter event loop
 root.mainloop()
